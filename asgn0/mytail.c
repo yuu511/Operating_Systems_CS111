@@ -1,13 +1,17 @@
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 void tail_mode(char **args){
 }
 
 void echo_mode(){
-    char data [128];
-    read (0,data,128);
-    write (1,data,128);
+    while(1){
+      char data [128];
+      memset(data,0,sizeof(data));
+      read (0,data,sizeof(data));
+      write (1,data,sizeof(data));
+    }
 }
 
 int main(int argc, char **argv){
