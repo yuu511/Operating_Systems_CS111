@@ -13,7 +13,6 @@ void tail_mode(int num_args,char **arg_names){
     char tl[MAX_CHAR_BUFFER]={0};
     char tl_reversed[MAX_CHAR_BUFFER]={0};
     int current_number_lines = 0;
-
     read (fileopen,tl,sizeof(tl)); 
     for (int j = sizeof(tl) - 1; j >= 0 ; j--){ 
       if (tl[j] == '\0')
