@@ -1,6 +1,5 @@
 #include <unistd.h>
 #include <fcntl.h>
-#include <stdio.h>
 #define MAX_CHAR_BUFFER 128
 #define TAIL_SIZE 10
 
