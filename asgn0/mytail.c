@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
-#define MAX_CHAR_BUFFER 128
+#define MAX_CHAR_BUFFER 2048
 #define TAIL_SIZE 10
 
 void tail_mode(int num_args,char **arg_names){
