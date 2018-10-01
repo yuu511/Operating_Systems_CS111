@@ -19,4 +19,4 @@ However, I have to account for the fact that the last line might not end in \n.
 The first character that is not empty (which will be the last character of the original document, as we are iterating backwards) will not be checked, and will be counted as a 
 line whether or not it ends in \n, as explained in the assumption above. The iteration will end once this number is greater the amount of lines to print specified, which is 10. Since 
 we are iterating the text line backwards, we are writing from the end to the beginning in the buffer we are writing to , as to preserve the original order of the text (it would be
-backwards if we wrote normally from beginning to end).
+backwards if we wrote normally from beginning to end) .
