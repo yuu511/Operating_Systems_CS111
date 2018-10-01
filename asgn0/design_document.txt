@@ -1,0 +1,18 @@
+Design Doc
+Elijah Cordova
+CruzID: ejcordov
+CMPS111, Fall 2018
+
+1. Goal
+
+The goal of this program is :
+  ~ Provided any number of files, print the last ten lines of the files(in the order specified, if a file cannot be open or read stop the process immediately).
+  ~ Provided no files, copy standard input to standard output
+
+2. Assumptions
+I assume that newlines are represented by \n. So, this program will only hold up to *nix standards, and the number of lines in the program should be equal to
+the amount of newlines in the program. However, I have to account for the fact that the last line might not end in \n.
+
+3. Design
+  The approach I'm going to take is to read the file, then iterate it over backwards, taking note of how many newlines exist. The last character will not be 
+checked, but will always be counted towards the count of newlines. 
