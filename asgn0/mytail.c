@@ -6,18 +6,20 @@
 
 void tail_mode(int num_args,char **arg_names){
   for (int i=1 ; i<num_args ; i++){
-    int file = open(arg_names[i],O_RDONLY);
+    int fileopen = open(arg_names[i],O_RDONLY);
     char tl[MAX_CHAR_BUFFER]={0};
     char tl_reversed[MAX_CHAR_BUFFER]={0};
     int current_number_lines = 0;
-    read (file,tl,sizeof(tl)); 
-    for (int j = sizeof(tl) - 1; j >= 0 ; j--){ 
+    read (fileopen,tl,sizeof(tl)); 
+    for (int j = sizeof(tl) - 2; j >= 0 ; j--){ 
+      if (tl[j] == '\n'){
+        current_number_lines +=1;
+      }
       if(current_number_lines > TAIL_SIZE)
         break;
-      if (tl[j] == '\n')
-        current_number_lines +=1;
       tl_reversed[j] = tl[j];     
     }
+    int fileclose = close(fileopen);
     write (1,tl_reversed,sizeof(tl_reversed));
   }
 }
