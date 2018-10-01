@@ -7,8 +7,8 @@
 void tail_mode(int num_args,char **arg_names){
   for (int i=1 ; i<num_args ; i++){
     int fileopen = open(arg_names[i],O_RDONLY);
-    if (fileopen == -1){
-      perror ("error opening file %s"); 
+    if (fileopen < 0){
+      perror ("error opening file"); 
     }
     char tl[MAX_CHAR_BUFFER]={0};
     char tl_reversed[MAX_CHAR_BUFFER]={0};
@@ -25,8 +25,8 @@ void tail_mode(int num_args,char **arg_names){
       tl_reversed[j] = tl[j];     
     }
     int fileclose = close(fileopen);
-    if (fileclose == -1){
-      perror ("error closing file %s"); 
+    if (fileclose < 0){
+      perror ("error closing file"); 
     }
     write (1,tl_reversed,sizeof(tl_reversed));
   }
