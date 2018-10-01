@@ -8,21 +8,18 @@ void tail_mode(int num_args,char **arg_names){
   for (int i=1 ; i<num_args ; i++){
     int file = open(arg_names[i],O_RDONLY);
     char tl[MAX_CHAR_BUFFER]={0};
-    char towrite[TAIL_SIZE][MAX_CHAR_BUFFER]={0};
+    char tl_reversed[MAX_CHAR_BUFFER]={0};
     int current_number_lines = 0;
-    int current_line_char = 0;
 
     read (file,tl,sizeof(tl)); 
-    for (int j = sizeof(tl) - 2; j >= 0 ; j--){ 
+    for (int j = sizeof(tl) - 1; j >= 0 ; j--){ 
       if(current_number_lines > TAIL_SIZE)
         break;
-      if (tl[j] == '\n'){
-        current_line_char = 0; 
-	current_number_lines +=1;
-      }
-      towrite[TAIL_SIZE - current_number_lines][(MAX_CHAR_BUFFER - 1) - current_line_char] = tl[j];
-      current_line_char += 1; 
+      if (tl[j] == '\n')
+        current_number_lines +=1;
+      tl_reversed[j] = tl[j];     
     }
+    write (1,tl_reversed,sizeof(tl_reversed));
   }
 }
 
