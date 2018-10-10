@@ -23,4 +23,4 @@ terminated (this is the case of a file with 10 lines or more).)
 -To: stdout (1)
 -How many bytes to write: The amount of non exit ('\0') which should be counted via the iteration
 After that, we do another write syscall to write the exit code ('\0'). The entire program will work with multiple files and execute the program sequentially. If a file cannot be
-open or read, perror() will be thrown.
+open or read, perror() will be thrown and terminate the program with an error code.
