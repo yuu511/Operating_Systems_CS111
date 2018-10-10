@@ -1,6 +1,8 @@
 #include <unistd.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #define MAX_CHAR_BUFFER 2048
 #define TAIL_SIZE 10
 
@@ -10,23 +12,29 @@ void tail_mode(int num_args,char **arg_names){
     if (fileopen < 0){
       perror ("error opening file"); 
     }
-    char tl[MAX_CHAR_BUFFER]={0};
-    char tl_reversed[MAX_CHAR_BUFFER]={0};
-    int current_number_lines = 0;
+    char tl[MAX_CHAR_BUFFER];
+    memset (tl,0,sizeof(tl));
     read (fileopen,tl,sizeof(tl)); 
-    for (int j = sizeof(tl) - 1; j >= 0 ; j--){ 
+    int reversed_index = 0;
+    int current_number_lines = 0;
+    int num_reversed = 0;
+    for (int j = sizeof(tl)-1; j >= 0 ; j--){ 
       if (tl[j] == '\0')
         continue;
       if (tl[j] == '\n' || current_number_lines == 0)
         current_number_lines +=1;
-      if(current_number_lines > TAIL_SIZE)
+      if(current_number_lines > TAIL_SIZE){
+        reversed_index = j+1;   
         break;
-      tl_reversed[j] = tl[j];     
+      }
+      num_reversed +=1;
     }
     int fileclose = close(fileopen);
     if (fileclose < 0){
       perror ("error closing file"); 
     }
+    char tl_reversed[num_reversed];
+    memcpy(tl_reversed,tl+reversed_index,sizeof(tl_reversed));
     write (1,tl_reversed,sizeof(tl_reversed));
   }
 }
