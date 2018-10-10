@@ -33,8 +33,21 @@ void tail_mode(int num_args,char **arg_names){
     if (fileclose < 0){
       perror ("error closing file"); 
     }
-    write (1,tl+reversed_index,num_reversed);
-    write (1,'\0',1);
+    if (num_args < 3){
+      write (1,tl+reversed_index,num_reversed);
+      write (1,'\0',1);
+    }
+    else {
+      write (1,"==> ",4);
+      write (1,arg_names[i],strlen(arg_names[i]));
+      write (1," <==",4); 
+      write (1,"\n",1);
+      write (1,tl+reversed_index,num_reversed);
+      write (1,'\0',1);
+      if (num_args != i+1){
+        write (1,"\n",1);
+      }
+    }
   }
 }
 
