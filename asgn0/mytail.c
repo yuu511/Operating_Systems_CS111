@@ -1,8 +1,7 @@
 #include <unistd.h>
 #include <fcntl.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
 #define MAX_CHAR_BUFFER 2048
 #define TAIL_SIZE 10
 
@@ -13,7 +12,7 @@ void tail_mode(int num_args,char **arg_names){
       perror ("error opening file"); 
     }
     char tl[MAX_CHAR_BUFFER];
-    memset (tl,0,sizeof(tl));
+    memset(tl,0,sizeof(tl));
     read (fileopen,tl,sizeof(tl)); 
     int reversed_index = 0;
     int current_number_lines = 0;
