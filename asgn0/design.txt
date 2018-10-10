@@ -15,8 +15,12 @@ the amount of newlines in the program, the character buffer size will be [4096],
 However, I have to account for the fact that the last line might not end in \n.
 
 3. Design
-  The approach I'm going to take is to read the file, then iterate it over backwards, taking note of how many lines gave been processed from the amount of \n characters counted. 
-The first character that is not empty (which will be the last character of the original document, as we are iterating backwards) will not be checked, and will be counted as a 
-line whether or not it ends in \n, as explained in the assumption above. The iteration will end once this number is greater the amount of lines to print specified, which is 10. Since 
-we are iterating the text line backwards, we are writing from the end to the beginning in the buffer we are writing to , as to preserve the original order of the text (it would be
-backwards if we wrote normally from beginning to end) .
+The approach I'm going to take is to read the file into a buffer using syscall read(), then iterate it over backwards, looking for the character '\n'. 
+The program not only takes into account how many newlines are counted so far, but also the amount of non exit ('\0') characters read so far and the current index the iteration is at. 
+The iteration stops once the 11th newline is found, or at 0 (the beginning of the file). From there, we will use the write() system call to write:
+-From: the index starting from the index the loop terminated (which should be 0 (the start of the file , this case is a file with less then 10 lines) or the place where the loop 
+terminated (this is the case of a file with 10 lines or more).) 
+-To: stdout (1)
+-How many bytes to write: The amount of non exit ('\0') which should be counted via the iteration
+After that, we do another write syscall to write the exit code ('\0'). The entire program will work with multiple files and execute the program sequentially. If a file cannot be
+open or read, perror() will be thrown.
