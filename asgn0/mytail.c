@@ -33,9 +33,8 @@ void tail_mode(int num_args,char **arg_names){
     if (fileclose < 0){
       perror ("error closing file"); 
     }
-    char tl_reversed[num_reversed];
-    memcpy(tl_reversed,tl+reversed_index,sizeof(tl_reversed));
-    write (1,tl_reversed,sizeof(tl_reversed));
+    write (1,tl+reversed_index,num_reversed);
+    write (1,'\0',1);
   }
 }
 
