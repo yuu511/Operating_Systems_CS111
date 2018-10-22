@@ -52,10 +52,6 @@ void arg_exec(i){
   }
   if (p_id == 0){
     execvp(arg_tree[i][0],arg_tree[i]);
-    while (1){
-      if(wait(NULL) == - 1 )
-        break;
-    }
   }
 }
 
@@ -70,6 +66,10 @@ main()
         open_pipe();
         for (int i=0; i < command_iterations+1 ; i++){
 	  arg_exec(i);
+          while (1){
+            if(wait(NULL) == - 1 )
+              break;
+          }
         }
     }
 }
