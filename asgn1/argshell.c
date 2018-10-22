@@ -62,9 +62,10 @@ void arg_exec(i){
   }
   if (p_id == 0){
     if (strncmp (sp_char[i],">",1)==0){
-      int file_o = open (file_output[i],O_WRONLY|O_CREAT|O_TRUNC);
+      int file_o = open (file_output[i],O_WRONLY|O_CREAT,0666);
+      dup2(file_o,1);
       printf("%d",file_o);
-      // execvp(arg_tree[i][0],arg_tree[i]);
+      execvp(arg_tree[i][0],arg_tree[i]);
       close(file_o);
     }  
   }
@@ -86,6 +87,10 @@ main()
             if(wait(NULL) == - 1 )
               break;
           }
+        }
+        while (1){
+          if(wait(NULL) == - 1 )
+            break;
         }
     }
 }
