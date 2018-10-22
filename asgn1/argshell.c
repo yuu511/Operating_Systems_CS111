@@ -61,14 +61,34 @@ void arg_exec(i){
     perror("pid = -1");
   }
   if (p_id == 0){
-    if (strncmp (sp_char[i],">",1)==0){
-      int file_o = open (file_output[i],O_WRONLY|O_CREAT,0666);
-      dup2(file_o,1);
-      printf("%d",file_o);
+    // printf ("%s",sp_char[i]);
+    // printf ("%d",strcmp (sp_char[i],">")==0);
+    if (sp_char[i] != NULL){
+      printf ("%d",strcmp (sp_char[i],">"));
+      if (strcmp (sp_char[i],">")==0){
+        int file_o = open (file_output[i],O_WRONLY|O_CREAT,0666);
+        int old_stdout = dup(1);
+        dup2(file_o,1);
+        printf("%d",file_o);
+        execvp(arg_tree[i][0],arg_tree[i]);
+        fflush(stdout);
+        dup2(old_stdout,1);
+        close(old_stdout);
+        close(file_o);
+      }  
+    }
+    else {
       execvp(arg_tree[i][0],arg_tree[i]);
-      close(file_o);
-    }  
+    }
   }
+}
+
+void clean_buffers(){
+  memset(arg_tree,0,sizeof(arg_tree));
+  memset(file_input,0,sizeof(file_input));
+  memset(file_output,0,sizeof(file_output));
+  memset(sp_char,0,sizeof(sp_char));
+  memset(pipes,0,sizeof(pipes));
 }
 
 int
@@ -78,6 +98,7 @@ main()
     while (1) {
 	printf ("Command ('exit' to quit): ");
 	command_iterations = 0 ;
+	clean_buffers();
 	args = get_args();
 	read_arguments(args);
         // open_pipe();
