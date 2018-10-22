@@ -24,23 +24,27 @@ void read_arguments(char **arguments){
   }
   arg_tree[0] = arguments;
   for (int i = 0 ; arguments[i] != NULL; i++){
+    // printf ("argument :%s",arguments[i]);
     char cc = arguments[i][0];
     if (cc == '>'){
       arguments[i] = NULL;
       file_output[i] = arguments[i+1];
     }
+    if (cc== ';'){
+     arguments[i] = NULL;
+     command_iterations++; 
+     arg_tree[command_iterations] = &arguments[i+1];
+    }
   }
 }
 
-void execute_arguments(){
+void execute_arguments(i){
   int p_id = fork();
   if (p_id==-1){
     perror("pid = -1");
   }
   if (p_id == 0){
-    for (int i=0; i < command_iterations + 1 ; i++){
-      execvp (arg_tree[i][0],arg_tree[i]);
-    }
+    execvp(arg_tree[i][0],arg_tree[i]);
   }
   while (1){
     if(wait(NULL) == - 1 )
@@ -56,6 +60,8 @@ main()
 	printf ("Command ('exit' to quit): ");
 	args = get_args();
 	read_arguments(args);
-	execute_arguments();
+        for (int i=0; i < command_iterations+1 ; i++){
+	  execute_arguments(i);
+        }
     }
 }
