@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-#define ARG_MAX 1024;
+#include <sys/wait.h>
 
 extern char ** get_args();
 int status_exit = 0;
@@ -41,6 +41,10 @@ void execute_arguments(){
     for (int i=0; i < command_iterations + 1 ; i++){
       execvp (arg_tree[i][0],arg_tree[i]);
     }
+  }
+  while (1){
+    if(wait(NULL) == - 1 )
+      break;
   }
 }
 
