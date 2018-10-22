@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 extern char ** get_args();
 int status_exit = 0;
@@ -12,6 +13,7 @@ char **arg_tree[1024];
 int command_iterations = 0;      
 char *file_input [1024];
 char *file_output [1024];
+char *sp_char[1024];
 int *pipes [1024]; 
 
 
@@ -27,8 +29,16 @@ void read_arguments(char **arguments){
     // printf ("argument :%s",arguments[i]);
     char cc = arguments[i][0];
     if (cc == '>'){
+      if (arguments[i][1]){
+        if (arguments[i][1]=='>'){
+	  sp_char[command_iterations] = ">>";
+	}
+      } 
+      else {
+	sp_char[command_iterations] = ">";
+      }
       arguments[i] = NULL;
-      file_output[i] = arguments[i+1];
+      file_output[command_iterations] = arguments[i+1];
     }
     if (cc== ';'){
      arguments[i] = NULL;
@@ -51,7 +61,12 @@ void arg_exec(i){
     perror("pid = -1");
   }
   if (p_id == 0){
-    execvp(arg_tree[i][0],arg_tree[i]);
+    if (strncmp (sp_char[i],">",1)==0){
+      int file_o = open (file_output[i],O_WRONLY|O_CREAT|O_TRUNC);
+      printf("%d",file_o);
+      // execvp(arg_tree[i][0],arg_tree[i]);
+      close(file_o);
+    }  
   }
 }
 
@@ -61,9 +76,10 @@ main()
     char **     args;
     while (1) {
 	printf ("Command ('exit' to quit): ");
+	command_iterations = 0 ;
 	args = get_args();
 	read_arguments(args);
-        open_pipe();
+        // open_pipe();
         for (int i=0; i < command_iterations+1 ; i++){
 	  arg_exec(i);
           while (1){
