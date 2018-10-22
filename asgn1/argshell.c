@@ -38,17 +38,24 @@ void read_arguments(char **arguments){
   }
 }
 
-void execute_arguments(i){
+void open_pipe(){
+  for( int i=0 ;i< command_iterations; i++){
+    pipes[i] = calloc(2,sizeof(int));
+    if (pipe(pipes[i]) == -1 ) perror("failed to create pipe!");
+  }
+}
+
+void arg_exec(i){
   int p_id = fork();
   if (p_id==-1){
     perror("pid = -1");
   }
   if (p_id == 0){
     execvp(arg_tree[i][0],arg_tree[i]);
-  }
-  while (1){
-    if(wait(NULL) == - 1 )
-      break;
+    while (1){
+      if(wait(NULL) == - 1 )
+        break;
+    }
   }
 }
 
@@ -60,8 +67,9 @@ main()
 	printf ("Command ('exit' to quit): ");
 	args = get_args();
 	read_arguments(args);
+        open_pipe();
         for (int i=0; i < command_iterations+1 ; i++){
-	  execute_arguments(i);
+	  arg_exec(i);
         }
     }
 }
