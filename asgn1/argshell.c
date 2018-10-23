@@ -7,16 +7,17 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <signal.h>
+#define MAX_BUF 1024
 
 extern char ** get_args();
 int status_exit = 0;
-char **arg_tree[1024];      
+char **arg_tree[MAX_BUF];      
 int command_iterations = 0;      
-char *file_input [1024];
-char *file_output [1024];
-char *sp_char[1024];
-int print_error[1024];
-char **fd2_args[1024];
+char *file_input [MAX_BUF];
+char *file_output [MAX_BUF];
+char *sp_char[MAX_BUF];
+int print_error[MAX_BUF];
+char **fd2_args[MAX_BUF];
 
 
 void read_arguments(char **arguments){
@@ -44,13 +45,11 @@ void read_arguments(char **arguments){
       sp_char[command_iterations]="<";    
       arguments[i] = NULL;
       file_input[command_iterations] = arguments[i+1];
-      if (arguments[i][1]){
-        if (arguments[i][1] == '&'){
-          print_error[command_iterations]=1;  
-        }
-      }
     }
     if (cc == '|'){
+      if (arguments[i][1] == '&'){
+        print_error[command_iterations]=1;  
+      }
       arguments[i] = NULL;
       sp_char[command_iterations]="|";    
       fd2_args[command_iterations] = &arguments[i+1];
@@ -67,6 +66,7 @@ void read_arguments(char **arguments){
 void exec_pipe(i){
   int old_stdin = dup(0);
   int old_stdout = dup(1);
+  int old_stderr = dup(2);
   int fd[2];
   pipe (fd);
   int p_id = fork();
@@ -79,25 +79,33 @@ void exec_pipe(i){
           close(fd[0]); 
           dup2(fd[1],0);
           execvp(fd2_args[i][0],fd2_args[i]);
-	  close(fd[1]);
+          close(fd[1]);
           fflush(stdin);
           dup2(old_stdin,0);
           close(old_stdin);
+          if (print_error[i] == 1) {
+            fflush(stderr);
+            dup2(old_stderr,2);
+            close(old_stderr);
+          }
       }
     }
   }
   else {
-   if (sp_char[i] != NULL){
-     if (strcmp (sp_char[i],"|")==0){
-       close(fd[1]); 
-       dup2(fd[0],1);
-       execvp(arg_tree[i][0],arg_tree[i]);
-       close(fd[0]);
-       fflush(stdout);
-       dup2(old_stdout,1);
-       close(old_stdout);
-     }
-   }
+    if (sp_char[i] != NULL){
+      if (strcmp (sp_char[i],"|")==0){
+        close(fd[1]); 
+        dup2(fd[0],1);
+        if (print_error[i] == 1) {
+          dup2(fd[0],2);
+        }
+        execvp(arg_tree[i][0],arg_tree[i]);
+        close(fd[0]);
+        fflush(stdout);
+        dup2(old_stdout,1);
+        close(old_stdout);
+      }
+    }
   }
 }
 
@@ -113,31 +121,29 @@ void arg_exec(i){
     if (sp_char[i] != NULL){
       if (strcmp (sp_char[i],">")==0 || strcmp (sp_char[i],">>")==0){
 	int file_o=0;
-//	int old_sterr = 0;
+	int old_stderr = 0;
 	if (strcmp (sp_char[i],">")==0)
           file_o = open (file_output[i],O_WRONLY|O_CREAT|O_TRUNC,0644);
 	else if (strcmp (sp_char[i],">>")==0)
           file_o = open (file_output[i],O_WRONLY|O_CREAT|O_APPEND,0644);
         int old_stdout = dup(1);
         dup2(file_o,1);
-        printf ("%d",print_error[i]);
-//	if (print_error[i] == 1){
-//          old_sterr = dup (2);
-//	  dup2(file_o,2);
-//	}
+	if (print_error[i] == 1){
+          old_stderr = dup (2);
+	  dup2(file_o,2);
+	}
         execvp(arg_tree[i][0],arg_tree[i]);
         fflush(stdout);
         dup2(old_stdout,1);
         close(old_stdout);
         close(file_o);
-//	if (print_error[i] == 1){
-//          fflush(stderr);
-//          dup2(old_sterr,2);
-//	  close(old_sterr);
-//	}
+	if (print_error[i] == 1){
+          fflush(stderr);
+          dup2(old_stderr,2);
+	  close(old_stderr);
+	}
       }  
       else if (strcmp (sp_char[i],"<")==0){
-        printf("%s",file_input[i]);
         int file_i = open(file_input[i],O_RDONLY,0644);
         int old_stdin = dup(0);
         dup2(file_i,0);
@@ -167,6 +173,7 @@ void clean_buffers(){
   memset(arg_tree,0,sizeof(arg_tree));
   memset(file_input,0,sizeof(file_input));
   memset(file_output,0,sizeof(file_output));
+  memset(fd2_args,0,sizeof(fd2_args));
   memset(sp_char,0,sizeof(sp_char));
   memset(print_error,0,sizeof(print_error));
 }
