@@ -23,11 +23,12 @@ the shell will continuosly execute and have a prompt and print that prompt every
 calls a command.
 
 3. Design
-The approach I'm going to take is to have an infintiely running loop. In the loop, First print the 
-prompt (Given as Command:) which will be an indicator of whether or not a process is running or not. Second, read ALL arguments, making
-sure not to execute anything. If the first argument is 'cd', execute cd. 
-Based on the arguments: determine the flags and/or any special characters (< > >> | & ;) 
+The approach I'm going to take is to have an infintiely running loop. In the loop, 
+First print the prompt (Given as Command:) which will be an indicator of whether or not a process is running or not.
+Second, read ALL arguments, making sure not to execute anything until all have been parsed. If the first argument is 'cd', execute cd. 
+Third: Based on the arguments: determine the flags and/or any special characters (< > >> | & ;) 
 that the line has. Any command with the special characters will be run through a special input/output related function.
+For ; specifically, we must make sure that we have a sequential list of commands to run.
 If any of the chracters is not recognized, then throw an error and resume the loop from step one again, 
-Third, after parsing the special characters, execute the command(s).
+Fourth, after parsing the special characters, execute the command(s).
 
