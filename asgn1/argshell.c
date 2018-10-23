@@ -209,16 +209,16 @@ main()
             exit(status_exit);
         }
 	read_arguments(args);
-        if (strcmp (arg_tree[command_iterations][0],"cd")==0){
-          if(sz_args[command_iterations] == 1){
-            int change_1 = chdir(cwd);
-          }
-          if(sz_args[command_iterations] == 2){
-            int change_2 = chdir(arg_tree[command_iterations][1]);
-          }
-	  continue;
-        }
         for (int i=0; i < command_iterations+1 ; i++){
+          if (strcmp (arg_tree[command_iterations][0],"cd")==0){
+            if(sz_args[command_iterations] == 1){
+              int change_1 = chdir(cwd);
+            }
+            if(sz_args[command_iterations] == 2){
+              int change_2 = chdir(arg_tree[command_iterations][1]);
+            }
+	    continue;
+          }
 	  arg_exec(i);
           while (1){
             if(wait(NULL) == - 1 )
