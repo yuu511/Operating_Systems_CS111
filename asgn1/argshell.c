@@ -14,6 +14,7 @@ char **arg_tree[MAX_BUF];
 int command_iterations = 0;      
 char *file_input [MAX_BUF];
 char *file_output [MAX_BUF];
+int sz_args[MAX_BUF];
 char *sp_char[MAX_BUF];
 int print_error[MAX_BUF];
 char **fd2_args[MAX_BUF];
@@ -23,36 +24,43 @@ char *cwd;
 void read_arguments(char **arguments){
   arg_tree[0] = arguments;
   for (int i = 0 ; arguments[i] != NULL; i++){
-    // printf ("argument :%s",arguments[i]);
+    sz_args[command_iterations]++;
     char cc = arguments[i][0];
     if (cc == '>'){
-      if (arguments[i][1]=='>'){
-        sp_char[command_iterations] = ">>";
-        if (arguments[i][2] == '&'){
-	  print_error[command_iterations]=1;  
-	}
-      }
-      else {
-	sp_char[command_iterations] = ">";
-        if (arguments[i][1] == '&'){
-	  print_error[command_iterations]=1;  
-	}
+       // printf ("\n\n%d\n\n",sz_args[command_iterations]);
+      if (sz_args[command_iterations] >= 2){
+        if (arguments[i][1]=='>'){
+          sp_char[command_iterations] = ">>";
+          if (arguments[i][2] == '&'){
+            print_error[command_iterations]=1;  
+          }
+        }
+        else {
+          sp_char[command_iterations] = ">";
+          if (arguments[i][1] == '&'){
+            print_error[command_iterations]=1;  
+          }
+        }
       }
       arguments[i] = NULL;
       file_output[command_iterations] = arguments[i+1];
     }
     if (cc == '<'){
-      sp_char[command_iterations]="<";    
-      arguments[i] = NULL;
-      file_input[command_iterations] = arguments[i+1];
+      if (sz_args[command_iterations] >= 2){
+        sp_char[command_iterations]="<";    
+        arguments[i] = NULL;
+        file_input[command_iterations] = arguments[i+1];
+      }
     }
     if (cc == '|'){
-      if (arguments[i][1] == '&'){
-        print_error[command_iterations]=1;  
+      if (sz_args[command_iterations] >= 2){
+        if (arguments[i][1] == '&'){
+          print_error[command_iterations]=1;  
+        }
+        arguments[i] = NULL;
+        sp_char[command_iterations]="|";    
+        fd2_args[command_iterations] = &arguments[i+1];
       }
-      arguments[i] = NULL;
-      sp_char[command_iterations]="|";    
-      fd2_args[command_iterations] = &arguments[i+1];
     }
     if (cc== ';'){
      arguments[i] = NULL;
@@ -116,6 +124,16 @@ void arg_exec(i){
     perror("pid = -1");
   }
   if (p_id == 0){
+    if (strcmp (arg_tree[i][0],"cd")==0){
+      if(sz_args[i] == 1){
+        int change_1 = chdir(cwd);
+      }
+      if(sz_args[i] == 2){
+         printf("%s",arg_tree[i][1]);
+         int change_2 = chdir(arg_tree[i][1]);
+      }
+      return;
+    }
     if (sp_char[i] != NULL){
       if (strcmp (sp_char[i],">")==0 || strcmp (sp_char[i],">>")==0){
 	int file_o=0;
@@ -129,7 +147,7 @@ void arg_exec(i){
 	if (print_error[i] == 1){
           old_stderr = dup (2);
 	  dup2(file_o,2);
-	}
+        }
         execvp(arg_tree[i][0],arg_tree[i]);
         fflush(stdout);
         dup2(old_stdout,1);
@@ -164,8 +182,6 @@ void arg_exec(i){
       execvp(arg_tree[i][0],arg_tree[i]);
     }
   } 
-  if (strcmp(arg_tree[i][0],"cd")==0){
-  }
 }
 
 
@@ -176,6 +192,7 @@ void clean_buffers(){
   memset(fd2_args,0,sizeof(fd2_args));
   memset(sp_char,0,sizeof(sp_char));
   memset(print_error,0,sizeof(print_error));
+  memset(sz_args,0,sizeof(sz_args));
 }
 
 int
