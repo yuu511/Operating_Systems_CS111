@@ -50,9 +50,9 @@ void read_arguments(char **arguments){
     if (cc == '|'){
       arguments[i] = NULL;
       sp_char[command_iterations]="|";    
-      //if (arguments[i][1] == '&'){
-      //  print_error[command_iterations]=1;  
-      //}
+      if (arguments[i][1] == '&'){
+        print_error[command_iterations]=1;  
+      }
     }
     if (cc== ';'){
      arguments[i] = NULL;
