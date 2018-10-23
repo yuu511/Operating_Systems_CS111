@@ -65,6 +65,8 @@ void read_arguments(char **arguments){
 
 
 void exec_pipe(i){
+  int old_stdin = dup(0);
+  int old_stdout = dup(1);
   int fd[2];
   pipe (fd);
   int p_id = fork();
@@ -74,26 +76,26 @@ void exec_pipe(i){
   if (p_id == 0){
     if (sp_char[i] != NULL){
       if (strcmp (sp_char[i],"|")==0){
-       // int old_stdin = dup(0);
-       // close(fd[0]); 
-       // dup2(fd[1],0);
+          close(fd[0]); 
+          dup2(fd[1],0);
           execvp(fd2_args[i][0],fd2_args[i]);
-       // fflush(stdin);
-       // dup2(old_stdin,0);
-       // close(old_stdin);
+	  close(fd[1]);
+          fflush(stdin);
+          dup2(old_stdin,0);
+          close(old_stdin);
       }
     }
   }
   else {
    if (sp_char[i] != NULL){
      if (strcmp (sp_char[i],"|")==0){
-     //    int old_stdout = dup(1);
-     //    close(fd[1]); 
-     //    dup2(fd[0],1);
-         execvp(arg_tree[i][0],arg_tree[i]);
-     //    fflush(stdout);
-     //    dup2(old_stdout,1);
-     //    close(old_stdout);
+       close(fd[1]); 
+       dup2(fd[0],1);
+       execvp(arg_tree[i][0],arg_tree[i]);
+       close(fd[0]);
+       fflush(stdout);
+       dup2(old_stdout,1);
+       close(old_stdout);
      }
    }
   }
