@@ -11,3 +11,13 @@ zroot/var/log         3.7G    188K    3.7G     0%    /var/log
 zroot/var/mail        3.7G    108K    3.7G     0%    /var/mail
 zroot/var/tmp         3.7G     88K    3.7G     0%    /var/tmp
 zroot                 3.7G     88K    3.7G     0%    /zroot
+argshell
+argshell.c
+argshell.o
+design.txt
+lex.yy.c
+lex.yy.o
+makefile
+shell.l
+syaro.txt
+test.txt

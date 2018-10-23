@@ -64,10 +64,12 @@ void arg_exec(i){
     // printf ("%s",sp_char[i]);
     // printf ("%d",strcmp (sp_char[i],">")==0);
     if (sp_char[i] != NULL){
-      printf ("%s",sp_char[i]);
-      if (strcmp (sp_char[i],">")==0){
-	printf ("1!");
-        int file_o = open (file_output[i],O_WRONLY|O_CREAT|O_TRUNC,0644);
+      if (strcmp (sp_char[i],">")==0 || strcmp (sp_char[i],">>")==0){
+	int file_o=0;
+	if (strcmp (sp_char[i],">")==0)
+        file_o = open (file_output[i],O_WRONLY|O_CREAT|O_TRUNC,0644);
+	else if (strcmp (sp_char[i],">>")==0)
+        file_o = open (file_output[i],O_WRONLY|O_CREAT|O_APPEND,0644);
         int old_stdout = dup(1);
         dup2(file_o,1);
         printf("%d",file_o);
@@ -77,18 +79,6 @@ void arg_exec(i){
         close(old_stdout);
         close(file_o);
       }  
-      else if (strcmp (sp_char[i],">>")==0){
-	printf ("2!");
-        int file_o = open (file_output[i],O_WRONLY|O_CREAT|O_APPEND,0644);
-        int old_stdout = dup(1);
-        dup2(file_o,1);
-        printf("%d",file_o);
-        execvp(arg_tree[i][0],arg_tree[i]);
-        fflush(stdout);
-        dup2(old_stdout,1);
-        close(old_stdout);
-        close(file_o);
-      }
     }
     else {
       execvp(arg_tree[i][0],arg_tree[i]);
