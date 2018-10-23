@@ -16,6 +16,7 @@ char *file_input [1024];
 char *file_output [1024];
 char *sp_char[1024];
 int print_error[1024];
+char **fd2_args[1024];
 
 
 void read_arguments(char **arguments){
@@ -43,16 +44,16 @@ void read_arguments(char **arguments){
       sp_char[command_iterations]="<";    
       arguments[i] = NULL;
       file_input[command_iterations] = arguments[i+1];
-      if (arguments[i][1] == '&'){
-        print_error[command_iterations]=1;  
+      if (arguments[i][1]){
+        if (arguments[i][1] == '&'){
+          print_error[command_iterations]=1;  
+        }
       }
     }
     if (cc == '|'){
       arguments[i] = NULL;
       sp_char[command_iterations]="|";    
-      if (arguments[i][1] == '&'){
-        print_error[command_iterations]=1;  
-      }
+      fd2_args[command_iterations] = &arguments[i+1];
     }
     if (cc== ';'){
      arguments[i] = NULL;
@@ -73,32 +74,31 @@ void exec_pipe(i){
   if (p_id == 0){
     if (sp_char[i] != NULL){
       if (strcmp (sp_char[i],"|")==0){
-       int old_stdout = dup(1);
-       close(fd[0]); 
-       dup2(fd[1],1);
-       close(fd[1]);
-       execvp(arg_tree[i][1],arg_tree[i]);
-       fflush(stdout);
-       dup2(old_stdout,1);
-       close(old_stdout);
+       // int old_stdin = dup(0);
+       // close(fd[0]); 
+       // dup2(fd[1],0);
+          execvp(fd2_args[i][0],fd2_args[i]);
+       // fflush(stdin);
+       // dup2(old_stdin,0);
+       // close(old_stdin);
       }
     }
   }
   else {
    if (sp_char[i] != NULL){
      if (strcmp (sp_char[i],"|")==0){
-         int old_stdin = dup(0);
-         close(fd[1]); 
-         dup2(fd[0],0);
-         close(fd[1]);
+     //    int old_stdout = dup(1);
+     //    close(fd[1]); 
+     //    dup2(fd[0],1);
          execvp(arg_tree[i][0],arg_tree[i]);
-         fflush(stdin);
-         dup2(old_stdin,0);
-         close(old_stdin);
+     //    fflush(stdout);
+     //    dup2(old_stdout,1);
+     //    close(old_stdout);
      }
    }
   }
 }
+
 
 void arg_exec(i){
   int p_id = fork();
@@ -147,11 +147,11 @@ void arg_exec(i){
       }
       else if (strcmp (sp_char[i],"|")==0){
         exec_pipe(i);
-        while (1){
-          if(wait(NULL) == - 1 )
-            break;
-        }
-	exit(0);
+          while (1){
+            if(wait(NULL) == - 1 )
+              break;
+          }
+	  exit(0);
       }
     }
     else {
