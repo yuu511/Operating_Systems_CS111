@@ -8,7 +8,6 @@
 #include <fcntl.h>
 #include <signal.h>
 #define MAX_BUF 1024
-
 extern char ** get_args();
 int status_exit = 0;
 char **arg_tree[MAX_BUF];      
@@ -165,6 +164,8 @@ void arg_exec(i){
       execvp(arg_tree[i][0],arg_tree[i]);
     }
   } 
+  if (strcmp(arg_tree[i][0],"cd")==0){
+  }
 }
 
 
