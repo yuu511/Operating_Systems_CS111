@@ -124,16 +124,6 @@ void arg_exec(i){
     perror("pid = -1");
   }
   if (p_id == 0){
-    if (strcmp (arg_tree[i][0],"cd")==0){
-      if(sz_args[i] == 1){
-        int change_1 = chdir(cwd);
-      }
-      if(sz_args[i] == 2){
-         printf("%s",arg_tree[i][1]);
-         int change_2 = chdir(arg_tree[i][1]);
-      }
-      return;
-    }
     if (sp_char[i] != NULL){
       if (strcmp (sp_char[i],">")==0 || strcmp (sp_char[i],">>")==0){
 	int file_o=0;
@@ -219,6 +209,15 @@ main()
             exit(status_exit);
         }
 	read_arguments(args);
+        if (strcmp (arg_tree[command_iterations][0],"cd")==0){
+          if(sz_args[command_iterations] == 1){
+            int change_1 = chdir(cwd);
+          }
+          if(sz_args[command_iterations] == 2){
+            int change_2 = chdir(arg_tree[command_iterations][1]);
+          }
+	  continue;
+        }
         for (int i=0; i < command_iterations+1 ; i++){
 	  arg_exec(i);
           while (1){
