@@ -18,6 +18,7 @@ char *file_output [MAX_BUF];
 char *sp_char[MAX_BUF];
 int print_error[MAX_BUF];
 char **fd2_args[MAX_BUF];
+char *cwd;
 
 
 void read_arguments(char **arguments){
@@ -116,8 +117,6 @@ void arg_exec(i){
     perror("pid = -1");
   }
   if (p_id == 0){
-    // printf ("%s",sp_char[i]);
-    // printf ("%d",strcmp (sp_char[i],">")==0);
     if (sp_char[i] != NULL){
       if (strcmp (sp_char[i],">")==0 || strcmp (sp_char[i],">>")==0){
 	int file_o=0;
@@ -159,7 +158,7 @@ void arg_exec(i){
             if(wait(NULL) == - 1 )
               break;
           }
-	  exit(0);
+	  exit(status_exit);
       }
     }
     else {
@@ -181,6 +180,14 @@ void clean_buffers(){
 int
 main()
 {
+    cwd = calloc (MAX_BUF,sizeof(char));
+    if (!cwd){
+      perror ("MEMORY FAILURE,EXITING\n");
+      status_exit = 1;
+      exit(status_exit);
+    }
+    getcwd (cwd,MAX_BUF);
+    printf ("Initial CWD: %s \n",cwd);
     char **     args;
     while (1) {
 	printf ("Command ('exit' to quit): ");
