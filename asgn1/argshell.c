@@ -74,6 +74,8 @@ void exec_pipe(i){
   int old_stdin = dup(0);
   int old_stdout = dup(1);
   int old_stderr = dup(2);
+  if (old_stdin == -1 || old_stdout == -1 || old_stderr == -1)
+    perror("");
   int fd[2];
   pipe (fd);
   int p_id = fork();
@@ -83,17 +85,32 @@ void exec_pipe(i){
   if (p_id == 0){
     if (sp_char[i] != NULL){
       if (strcmp (sp_char[i],"|")==0){
-          close(fd[0]); 
-          dup2(fd[1],0);
-          execvp(fd2_args[i][0],fd2_args[i]);
+          int c1 = close(fd[0]); 
+	  if (c1 == -1){perror(""); exit(1); return;}
+          int d1 =dup2(fd[1],0);
+	  if (d1 == -1){perror(""); exit(1); return;}
+          int exece = execvp(fd2_args[i][0],fd2_args[i]);
+	  if (exece == -1 ){
+            fprintf(stderr,"could not find: %s !",fd2_args[i][0]);
+	    perror("");
+	    exit(1);
+          }
           close(fd[1]);
           fflush(stdin);
-          dup2(old_stdin,0);
-          close(old_stdin);
+
+          int d2 = dup2(old_stdin,0);
+	  if (d2 == -1){perror(""); exit(1); return;}
+
+          int c2 = close(old_stdin);
+	  if (c2 == -1){perror(""); exit(1); return;}
           if (print_error[i] == 1) {
             fflush(stderr);
-            dup2(old_stderr,2);
-            close(old_stderr);
+
+            int d3 = dup2(old_stderr,2);
+	    if (d3 == -1){perror(""); exit(1); return;}
+
+            int c3 =close(old_stderr);
+	    if (c3 == -1){perror(""); exit(1); return;}
           }
       }
     }
@@ -101,16 +118,29 @@ void exec_pipe(i){
   else {
     if (sp_char[i] != NULL){
       if (strcmp (sp_char[i],"|")==0){
-        close(fd[1]); 
-        dup2(fd[0],1);
+        int c1 = close(fd[1]); 
+	if (c1 == -1){perror(""); exit(1); return;}
+
+        int d4 = dup2(fd[0],1);
+	if (d4 == -1){perror(""); exit(1); return;}
+
         if (print_error[i] == 1) {
-          dup2(fd[0],2);
+          int d5 = dup2(fd[0],2);
+	  if (d5 == -1){perror(""); exit(1); return;}
         }
-        execvp(arg_tree[i][0],arg_tree[i]);
-        close(fd[0]);
+        int exece = execvp(arg_tree[i][0],arg_tree[i]);
+	if (exece == -1 ){
+          fprintf(stderr,"could not find: %s !",arg_tree[i][0]);
+	  perror("");
+	  exit(1);
+        }
+        int c2 = close(fd[0]);
+	if (c2 == -1){perror(""); exit(1); return;}
         fflush(stdout);
-        dup2(old_stdout,1);
-        close(old_stdout);
+        int d6 = dup2(old_stdout,1);
+	if (d6 == -1){perror(""); exit(1); return;}
+        int c3 = close(old_stdout);
+	if (c3 == -1){perror(""); exit(1); return;}
       }
     }
   }
@@ -131,17 +161,33 @@ void arg_exec(i){
           file_o = open (file_output[i],O_WRONLY|O_CREAT|O_TRUNC,0644);
 	else if (strcmp (sp_char[i],">>")==0)
           file_o = open (file_output[i],O_WRONLY|O_CREAT|O_APPEND,0644);
+	if (file_o == -1){perror(""); exit(1); return;}
         int old_stdout = dup(1);
-        dup2(file_o,1);
+        int d1 =dup2(file_o,1);
+	if (d1 == -1){perror(""); exit(1); return;}
 	if (print_error[i] == 1){
           old_stderr = dup (2);
-	  dup2(file_o,2);
+	  if (old_stderr == -1){perror(""); exit(1); return;}
+	  int d2= dup2(file_o,2);
+	  if (d2 == -1){perror(""); exit(1); return;}
         }
-        execvp(arg_tree[i][0],arg_tree[i]);
+        int exece = execvp(arg_tree[i][0],arg_tree[i]);
+	if (exece == -1 ){
+          fprintf(stderr,"could not find: %s !",arg_tree[i][0]);
+	  perror("");
+	  exit(1);
+        }
         fflush(stdout);
-        dup2(old_stdout,1);
-        close(old_stdout);
-        close(file_o);
+
+        int d3 = dup2(old_stdout,1);
+	if (d3 == -1){perror(""); exit(1); return;}
+
+        int c1 = close(old_stdout);
+	if (c1 == -1){perror(""); exit(1); return;}
+
+        int c2 = close(file_o);
+	if (c2 == -1){perror(""); exit(1); return;}
+
 	if (print_error[i] == 1){
           fflush(stderr);
           dup2(old_stderr,2);
@@ -150,13 +196,23 @@ void arg_exec(i){
       }  
       else if (strcmp (sp_char[i],"<")==0){
         int file_i = open(file_input[i],O_RDONLY,0644);
+	if (file_i == -1){perror(""); exit(1); return;}
         int old_stdin = dup(0);
-        dup2(file_i,0);
-        execvp(arg_tree[i][0],arg_tree[i]);
+        int d1 = dup2(file_i,0);
+	if (d1 == -1){perror(""); exit(1); return;}
+        int exece = execvp(arg_tree[i][0],arg_tree[i]);
+	if (exece == -1 ){
+          fprintf(stderr,"could not find: %s !",arg_tree[i][0]);
+	  perror("");
+	  exit(1);
+        }
         fflush(stdin);
-        dup2(old_stdin,0);
-        close(old_stdin);
-        close(file_i);
+        int d2 = dup2(old_stdin,0);
+	if (d2 == -1){perror(""); exit(1); return;}
+        int c1 = close(old_stdin);
+	if (c1 == -1){perror(""); exit(1); return;}
+        int c2 = close(file_i);
+	if (c2 == -1){perror(""); exit(1); return;}
       }
       else if (strcmp (sp_char[i],"|")==0){
         exec_pipe(i);
@@ -168,7 +224,12 @@ void arg_exec(i){
       }
     }
     else {
-      execvp(arg_tree[i][0],arg_tree[i]);
+      int exece = execvp(arg_tree[i][0],arg_tree[i]);
+      if (exece == -1 ){
+        fprintf(stderr,"could not find: %s !",arg_tree[i][0]);
+        perror("");
+        exit(1);
+      }
     }
   } 
 }
@@ -194,7 +255,6 @@ main()
       exit(status_exit);
     }
     getcwd (cwd,MAX_BUF);
-    printf ("Initial CWD: %s \n",cwd);
     char **     args;
     while (1) {
 	printf ("Command ('exit' to quit): ");
@@ -212,6 +272,9 @@ main()
           if (strcmp (arg_tree[command_iterations][0],"cd")==0){
             if(sz_args[command_iterations] == 1){
               int change_1 = chdir(cwd);
+	      if (change_1 == -1 ){
+	        perror("\n");
+	      }
             }
             if(sz_args[command_iterations] == 2){
               int change_2 = chdir(arg_tree[command_iterations][1]);
