@@ -20,7 +20,9 @@ int print_error[MAX_BUF];
 char **fd2_args[MAX_BUF];
 char *cwd;
 
-
+// read arguments and parse any special arguments (<,>>,>,&,|,;)
+// define arguments (and possible flags) from eachother 
+// order the arguments in sequential order
 void read_arguments(char **arguments){
   arg_tree[0] = arguments;
   for (int i = 0 ; arguments[i] != NULL; i++){
@@ -69,7 +71,8 @@ void read_arguments(char **arguments){
   }
 }
 
-
+// create a new process and execute two commands
+// wait for child process to complete before moving on
 void exec_pipe(i){
   int old_stdin = dup(0);
   int old_stdout = dup(1);
@@ -90,6 +93,7 @@ void exec_pipe(i){
           int d1 =dup2(fd[1],0);
 	  if (d1 == -1){perror(""); exit(1); return;}
           int exece = execvp(fd2_args[i][0],fd2_args[i]);
+	  wait(NULL);
 	  if (exece == -1 ){
             fprintf(stderr,"could not find: %s !",fd2_args[i][0]);
 	    perror("");
@@ -97,10 +101,8 @@ void exec_pipe(i){
           }
           close(fd[1]);
           fflush(stdin);
-
           int d2 = dup2(old_stdin,0);
 	  if (d2 == -1){perror(""); exit(1); return;}
-
           int c2 = close(old_stdin);
 	  if (c2 == -1){perror(""); exit(1); return;}
           if (print_error[i] == 1) {
@@ -120,15 +122,14 @@ void exec_pipe(i){
       if (strcmp (sp_char[i],"|")==0){
         int c1 = close(fd[1]); 
 	if (c1 == -1){perror(""); exit(1); return;}
-
         int d4 = dup2(fd[0],1);
 	if (d4 == -1){perror(""); exit(1); return;}
-
         if (print_error[i] == 1) {
           int d5 = dup2(fd[0],2);
 	  if (d5 == -1){perror(""); exit(1); return;}
         }
         int exece = execvp(arg_tree[i][0],arg_tree[i]);
+	wait(NULL);
 	if (exece == -1 ){
           fprintf(stderr,"could not find: %s !",arg_tree[i][0]);
 	  perror("");
@@ -144,9 +145,12 @@ void exec_pipe(i){
       }
     }
   }
+  waitpid (-1,NULL,0);
 }
 
-
+// execute a single command (with/without flags),
+// i = order executed (1 = first command, 2= second command,etc)
+// if a pipeline is detected, call function exec_pipe
 void arg_exec(i){
   int p_id = fork();
   if (p_id==-1){
@@ -175,19 +179,15 @@ void arg_exec(i){
 	if (exece == -1 ){
           fprintf(stderr,"could not find: %s !",arg_tree[i][0]);
 	  perror("");
-	  exit(1);
+	  return;
         }
         fflush(stdout);
-
         int d3 = dup2(old_stdout,1);
 	if (d3 == -1){perror(""); exit(1); return;}
-
         int c1 = close(old_stdout);
 	if (c1 == -1){perror(""); exit(1); return;}
-
         int c2 = close(file_o);
 	if (c2 == -1){perror(""); exit(1); return;}
-
 	if (print_error[i] == 1){
           fflush(stderr);
           dup2(old_stderr,2);
@@ -201,10 +201,11 @@ void arg_exec(i){
         int d1 = dup2(file_i,0);
 	if (d1 == -1){perror(""); exit(1); return;}
         int exece = execvp(arg_tree[i][0],arg_tree[i]);
+	wait(NULL);
 	if (exece == -1 ){
           fprintf(stderr,"could not find: %s !",arg_tree[i][0]);
 	  perror("");
-	  exit(1);
+	  return;
         }
         fflush(stdin);
         int d2 = dup2(old_stdin,0);
@@ -216,21 +217,19 @@ void arg_exec(i){
       }
       else if (strcmp (sp_char[i],"|")==0){
         exec_pipe(i);
-          while (1){
-            if(wait(NULL) == - 1 )
-              break;
-          }
-	  exit(status_exit);
+	exit(status_exit);
       }
-    }
+   }
     else {
       int exece = execvp(arg_tree[i][0],arg_tree[i]);
+      wait(NULL);
       if (exece == -1 ){
         fprintf(stderr,"could not find: %s !",arg_tree[i][0]);
         perror("");
-        exit(1);
+        return;
       }
-    }
+   }
+   waitpid (-1,NULL,0);
   } 
 }
 
@@ -269,7 +268,9 @@ main()
         }
 	read_arguments(args);
         for (int i=0; i < command_iterations+1 ; i++){
+          // Original implementaiton of cd 
           if (strcmp (arg_tree[command_iterations][0],"cd")==0){
+	    printf ("%d",sz_args[command_iterations]);
             if(sz_args[command_iterations] == 1){
               int change_1 = chdir(cwd);
 	      if (change_1 == -1 ){
@@ -286,17 +287,12 @@ main()
 	    if (sz_args[command_iterations] > 2){
               fprintf(stderr,"cd: too many arguments!");
 	    }
-	    continue;
           }
 	  arg_exec(i);
           while (1){
             if(wait(NULL) == - 1 )
               break;
           }
-        }
-        while (1){
-          if(wait(NULL) == - 1 )
-            break;
         }
     }
     free(cwd);

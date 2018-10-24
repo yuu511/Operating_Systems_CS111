@@ -31,4 +31,5 @@ that the line has. Any command with the special characters will be run through a
 For ; specifically, we must make sure that we have a sequential list of commands to run.
 If any of the chracters is not recognized, then throw an error and resume the loop from step one again, 
 Fourth, after parsing the special characters, execute the command(s).
+If using | or ; , run processes sequentially.
 
