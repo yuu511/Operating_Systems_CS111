@@ -27,7 +27,6 @@ void read_arguments(char **arguments){
     sz_args[command_iterations]++;
     char cc = arguments[i][0];
     if (cc == '>'){
-       // printf ("\n\n%d\n\n",sz_args[command_iterations]);
       if (sz_args[command_iterations] >= 2){
         if (arguments[i][1]=='>'){
           sp_char[command_iterations] = ">>";
@@ -216,7 +215,14 @@ main()
             }
             if(sz_args[command_iterations] == 2){
               int change_2 = chdir(arg_tree[command_iterations][1]);
+	      if (change_2 == -1 ){
+                fprintf(stderr,"cd: %s does not exist!",arg_tree[command_iterations][1]);
+	        perror("\n");
+	      }
             }
+	    if (sz_args[command_iterations] > 2){
+              fprintf(stderr,"cd: too many arguments!");
+	    }
 	    continue;
           }
 	  arg_exec(i);
@@ -230,4 +236,5 @@ main()
             break;
         }
     }
+    free(cwd);
 }
