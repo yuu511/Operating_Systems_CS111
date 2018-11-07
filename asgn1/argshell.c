@@ -73,7 +73,7 @@ void read_arguments(char **arguments){
 
 // create a new process and execute two commands
 // wait for child process to complete before moving on
-void exec_pipe(i){
+void exec_pipe(int i){
   int old_stdin = dup(0);
   int old_stdout = dup(1);
   int old_stderr = dup(2);
@@ -116,6 +116,9 @@ void exec_pipe(i){
           }
       }
     }
+    while (1){
+      wait(NULL);
+    }
   }
   else {
     if (sp_char[i] != NULL){
@@ -144,14 +147,16 @@ void exec_pipe(i){
 	if (c3 == -1){perror(""); exit(1); return;}
       }
     }
+    while (1){
+      wait(NULL);
+    }
   }
-  waitpid (-1,NULL,0);
 }
 
 // execute a single command (with/without flags),
 // i = order executed (1 = first command, 2= second command,etc)
 // if a pipeline is detected, call function exec_pipe
-void arg_exec(i){
+void arg_exec(int i){
   int p_id = fork();
   if (p_id==-1){
     perror("pid = -1");
