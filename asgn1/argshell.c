@@ -82,75 +82,79 @@ void exec_pipe(int i){
   int fd[2];
   pipe (fd);
   int p_id = fork();
-  if (p_id==-1){
+  if (p_id < 0){
     perror("pid = -1");
   }
   if (p_id == 0){
     if (sp_char[i] != NULL){
       if (strcmp (sp_char[i],"|")==0){
-          int c1 = close(fd[0]); 
-	  if (c1 == -1){perror(""); exit(1); return;}
-          int d1 =dup2(fd[1],0);
-	  if (d1 == -1){perror(""); exit(1); return;}
-          int exece = execvp(fd2_args[i][0],fd2_args[i]);
-	  wait(NULL);
+          int c1 = close(fd[1]); 
+	  if (c1 == -1){perror("error closing pipe fd1"); exit(1); return;}
+          int d1 =dup2(fd[0],0);
+	  if (d1 == -1){perror("error dup2 fd1"); exit(1); return;}
+          int exece = execvp(arg_tree[i][0],arg_tree[i]);
 	  if (exece == -1 ){
-            fprintf(stderr,"could not find: %s !",fd2_args[i][0]);
+            fprintf(stderr,"could not find: %s !",arg_tree[i][0]);
 	    perror("");
 	    exit(1);
           }
-          close(fd[1]);
-          fflush(stdin);
-          int d2 = dup2(old_stdin,0);
-	  if (d2 == -1){perror(""); exit(1); return;}
-          int c2 = close(old_stdin);
-	  if (c2 == -1){perror(""); exit(1); return;}
-          if (print_error[i] == 1) {
-            fflush(stderr);
-
-            int d3 = dup2(old_stderr,2);
-	    if (d3 == -1){perror(""); exit(1); return;}
-
-            int c3 =close(old_stderr);
-	    if (c3 == -1){perror(""); exit(1); return;}
-          }
+          // fflush(stdin);
+          // int d3 = dup2(old_stdout,0);
+	  // if (d3 == -1){perror(""); exit(1); return;}
+          // int c2 = close(old_stdout);
+	  // if (c2 == -1){perror(""); exit(1); return;}
+	  // if (print_error[i] == 1){
+          //   fflush(stderr);
+          //   dup2(old_stderr,2);
+	  //   close(old_stderr);
+	  // }
       }
-    }
-    while (1){
-      wait(NULL);
     }
   }
   else {
-    if (sp_char[i] != NULL){
-      if (strcmp (sp_char[i],"|")==0){
-        int c1 = close(fd[1]); 
-	if (c1 == -1){perror(""); exit(1); return;}
-        int d4 = dup2(fd[0],1);
-	if (d4 == -1){perror(""); exit(1); return;}
-        if (print_error[i] == 1) {
-          int d5 = dup2(fd[0],2);
-	  if (d5 == -1){perror(""); exit(1); return;}
-        }
-        int exece = execvp(arg_tree[i][0],arg_tree[i]);
-	wait(NULL);
-	if (exece == -1 ){
-          fprintf(stderr,"could not find: %s !",arg_tree[i][0]);
-	  perror("");
-	  exit(1);
-        }
-        int c2 = close(fd[0]);
-	if (c2 == -1){perror(""); exit(1); return;}
-        fflush(stdout);
-        int d6 = dup2(old_stdout,1);
-	if (d6 == -1){perror(""); exit(1); return;}
-        int c3 = close(old_stdout);
-	if (c3 == -1){perror(""); exit(1); return;}
+     while (1){
+       if(wait(NULL) == - 1 )
+         break;
+     }
+     if (sp_char[i] != NULL){
+       if (strcmp (sp_char[i],"|")==0){
+          int c1 = close(fd[0]); 
+	  if (c1 == -1){perror("error closing pipe fd0"); exit(1); return;}
+          // # int d2 = dup2(fd[1],0);          
+	  // # if (d2 == -1){perror("error dup2 fd1"); exit(1); return;}
+          // int exece = execvp(fd2_args[i][0],fd2_args[i]);
+          // if (exece == -1 ){
+          //   fprintf(stderr,"could not find: %s !",fd2_args[i][0]);
+          //   perror("");
+          //   exit(1);
+          // }
+//          fflush(stdin);
       }
     }
-    while (1){
-      wait(NULL);
-    }
   }
+  //       int c1 = close(fd[1]); 
+  //       if (c1 == -1){perror(""); exit(1); return;}
+  //       int d4 = dup2(fd[0],1);
+  //       if (d4 == -1){perror(""); exit(1); return;}
+  //       if (print_error[i] == 1) {
+  //         int d5 = dup2(fd[0],2);
+  //         if (d5 == -1){perror(""); exit(1); return;}
+  //       }
+  //       int exece = execvp(fd2_args[i][0],fd2_args[i]);
+  //         if (exece == -1 ){
+  //           fprintf(stderr,"could not find: %s !",fd2_args[i][0]);
+  //           perror("");
+  //           exit(1);
+  //         }
+  //       int c2 = close(fd[0]);
+  //       if (c2 == -1){perror(""); exit(1); return;}
+  //       fflush(stdout);
+  //       int d6 = dup2(old_stdout,1);
+  //       if (d6 == -1){perror(""); exit(1); return;}
+  //       int c3 = close(old_stdout);
+  //       if (c3 == -1){perror(""); exit(1); return;}
+  //     }
+  //   }
 }
 
 // execute a single command (with/without flags),
