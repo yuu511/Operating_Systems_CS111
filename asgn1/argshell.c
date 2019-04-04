@@ -110,8 +110,10 @@ void exec_pipe(int i){
        if (strcmp (sp_char[i],"|")==0){
           int c1 = close(fd[1]); 
 	  if (c1 == -1){perror("error closing pipe fd1"); exit(1); return;}
-          int d1 =dup2(fd[0],0);
+          int d1 =dup2(old_stdout,1);
 	  if (d1 == -1){perror("error dup2 fd1"); exit(1); return;}
+          int d2 =dup2(fd[0],0);
+	  if (d2 == -1){perror("error dup2 fd1"); exit(1); return;}
           int exece = execvp(fd2_args[i][0],fd2_args[i]);
           if (exece == -1 ){
             fprintf(stderr,"could not find: %s !",fd2_args[i][0]);
