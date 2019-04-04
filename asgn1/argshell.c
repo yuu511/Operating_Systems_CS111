@@ -88,9 +88,9 @@ void exec_pipe(int i){
   if (p_id == 0){
     if (sp_char[i] != NULL){
       if (strcmp (sp_char[i],"|")==0){
-          int c1 = close(fd[1]); 
-	  if (c1 == -1){perror("error closing pipe fd1"); exit(1); return;}
-          int d1 =dup2(fd[0],0);
+          int c1 = close(fd[0]); 
+	  if (c1 == -1){perror("error closing pipe fd0"); exit(1); return;}
+          int d1 =dup2(fd[1],1);
 	  if (d1 == -1){perror("error dup2 fd1"); exit(1); return;}
           int exece = execvp(arg_tree[i][0],arg_tree[i]);
 	  if (exece == -1 ){
@@ -98,16 +98,6 @@ void exec_pipe(int i){
 	    perror("");
 	    exit(1);
           }
-          // fflush(stdin);
-          // int d3 = dup2(old_stdout,0);
-	  // if (d3 == -1){perror(""); exit(1); return;}
-          // int c2 = close(old_stdout);
-	  // if (c2 == -1){perror(""); exit(1); return;}
-	  // if (print_error[i] == 1){
-          //   fflush(stderr);
-          //   dup2(old_stderr,2);
-	  //   close(old_stderr);
-	  // }
       }
     }
   }
@@ -118,17 +108,16 @@ void exec_pipe(int i){
      }
      if (sp_char[i] != NULL){
        if (strcmp (sp_char[i],"|")==0){
-          int c1 = close(fd[0]); 
-	  if (c1 == -1){perror("error closing pipe fd0"); exit(1); return;}
-          // # int d2 = dup2(fd[1],0);          
-	  // # if (d2 == -1){perror("error dup2 fd1"); exit(1); return;}
-          // int exece = execvp(fd2_args[i][0],fd2_args[i]);
-          // if (exece == -1 ){
-          //   fprintf(stderr,"could not find: %s !",fd2_args[i][0]);
-          //   perror("");
-          //   exit(1);
-          // }
-//          fflush(stdin);
+          int c1 = close(fd[1]); 
+	  if (c1 == -1){perror("error closing pipe fd1"); exit(1); return;}
+          int d1 =dup2(fd[0],0);
+	  if (d1 == -1){perror("error dup2 fd1"); exit(1); return;}
+          int exece = execvp(fd2_args[i][0],fd2_args[i]);
+          if (exece == -1 ){
+            fprintf(stderr,"could not find: %s !",fd2_args[i][0]);
+            perror("");
+            exit(1);
+          }
       }
     }
   }
@@ -226,6 +215,8 @@ void arg_exec(int i){
       }
       else if (strcmp (sp_char[i],"|")==0){
         exec_pipe(i);
+        fflush(stdin);
+        fflush(stdout);
 	exit(status_exit);
       }
    }
