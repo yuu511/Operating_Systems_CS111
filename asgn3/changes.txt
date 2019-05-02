@@ -1,0 +1,50 @@
+vm_pageout_log.c
+102,103
+
+1082
+1118
+1120
+1135
+1136
+1226
+1286
+1305-1308
+1380
+1381
+1461
+1480
+1490-1493
+1734
+1753-1764
+1840
+1841
+
+vm_pageout_log_fifo.c
+
+102,103
+
+1078://
+-removed defs
+1082
+1116-1122: restructured
+1134
+1135
+1140-1141: keep queue empty
+1231-1264: //reactivation
+1286
+1294: //j
+1306-1309
+1322-1325: //inactq
+1336-1344: //minscan
+1351
+1352
+1356-1357: resolve page shortage
+1381-1432://reference bit
+1448
+1450-1452://end of conditional
+1457-1460
+1461-1493:moved from earlier in function
+1731
+1750-1762
+1827-1828
+

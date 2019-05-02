@@ -1,0 +1,8 @@
+Files included:
+design.txt - design document
+sys/kern/kern_switch.c - original system file
+sys/kern/kern_switch_1.c - implementation for priority queue
+sys/kern/sched_ule.c - original system file
+sys/kern/sched_ule_2.c - implementation for splatter scheduling
+sys/kern/mode.sh - script file to change source files for kernel build
+asgn2_benchmarks.pdf - comparison of different run cases

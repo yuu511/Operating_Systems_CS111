@@ -1,0 +1,66 @@
+ASSIGNMENT 4 DESIGN DOCUMENT
+Elijah Cordova, Calvin Houser, Fanchao Kong, Roger Ou
+CruzIDs: ejcordov, cphouser, fkong1, rokou
+CMPS 111, Fall 2018
+
+GOALS:
+The main goal of this assignment is to use the FUSE file system framework to implement a simple FAT-based file system in user space. 
+We must :
+- Make a fat-formatted disk
+- Interact with the disk using routines defined in FUSE.
+
+ASSUMPTIONS: 
+Fat- formatted disk:
+  - Word = 32 Bits (4 Bytes)
+  - Blocks are either 512B or 8192B big.
+  - Superblock will be the first block.
+  - All directory and file headers will be 64 Bytes big, and have the exact format according to the spec.
+
+
+DESIGN:
+Split Creating the FAT disk and running routines for it.
+
+mk_disk.c : FAT disk creation / Formatting.
+  - Since a word is 4 Bytes big, Each block can hold B = (BLOCKSIZE / 4) pointers to a block.
+  - It then follows that we need k = ceiling(NUMBER OF BLOCKS/B) blocks if we were to reference all data available correctly. (FAT TABLE)   
+  - Since each pointer refrences a block, we cannot reference the superblock and FAT table itself (1 + k), and we must mark these blocks as unsuable, indicated by special value -1.
+  - It might be the case that we have too many pointers for the amount of data blocks we have. Mark these as unusable as well. 
+  - Mark all leftover pointers in the FAT table as 0, meaning that they are available.
+  - Allow user input : ./mkdisk [NUM BLOCKS REQUESTED] [0 or 1, representing 512B blocks or 8192B blocks] shall create the requested file system.
+
+fuse_routines.c: Defining the routines to interact with the FAT disk.
+  helper functions:
+  path_to_addr: Our most important helper function, which recursively finds the location of a directory header in the file system.
+  new_block : finds the first free block available for writing.
+  read_fat_entry: Given a block, show the corresponding FAT table entry.
+  initroot() : Creates a small amount of entries and directories for example reading / writing.
+
+ main functions::
+  - .getattr: Our most important main function, as it is called for every other function. Revursively derive the path and set the appropriate stbuf information, which is the mode (file or directory, link number , and size)
+  - .read: Recursively derive the path and extract the location(block) of the data with the file header. Add it to the buffer to be read with the appropriate offset.
+  - .open: Recursively derive the path. Find thaT file for writing, and store the block location using fi->fh
+  - .write: after open is called, recieve the appropriate information using fi->fh. Write with the appropriate offset and file name
+  -.readdir: Recursively derive the path and list all entries in that directory.
+  - .mkdir : Recursively derive the path, find a free block,  create a new entry in the file system, and define the parent block.
+ 
+FILES:
+fs.h :
+Shared definitions in mk_disk.c and fuse_routines.c. Constants : Word size, directory flag, file flag, etc
+mk_disk.c : Create the filesystem : ./mkdisk [NUMBER] [MODE]. Number = integer, Mode : 0 512 B, Mode 1: 8192B blocks
+fuse_routines.c : interact with the filesytem using FUSE.
+
+BUILD:
+%make
+%mk_disk [PARAMETERS 1 ] [PARAMETERS 2]
+
+- or run our script, which makes a 512 B block filesystem with 128 blocks-
+
+%gen.sh:
+make clean
+make
+./mk_disk 128 0
+
+TEST:
+%test.sh:
+Runs all of our supported commands.
+(Run as root)

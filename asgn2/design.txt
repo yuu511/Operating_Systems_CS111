@@ -1,0 +1,61 @@
+ASSIGNMENT 2 DESIGN DOCUMENT
+Elijah Cordova, Calvin Houser, Fanchao Kong, Roger Ou
+CruzIDs: ejcordov, cphouser, fkong1, rokou
+CMPS 111, Fall 2018
+
+GOAL:
+The goal of this assignment is to implement and compare four different scheduling cases in the FreeBSD process scheduler. The cases can be described as follows:
+Case 0: Default Schedule (a user process is scheduled onto one of 64 FIFO queues according to its priority)
+Case 1: Priority Queue (a user process is scheduled onto one of 64 priority queues according to its priority)
+Case 2: Splatter Scheduling (a user process is scheduled onto one of the designated user run queues randomly)
+Case 3: Splatter Scheduling + Priority Queue (a user process is scheduled onto one of 64 priority queues randomly)
+Each of these cases are implemented in the files kern_switch.c and sched_ule.c
+
+ASSUMPTIONS:
+In this design we are assuming the priority of a process will never change once it is scheduled. This allows our priority queue ordering to be preserved exclusively by the queue add operations. 
+
+DESIGN:
+The priority queue is implemented in cases 1 and 3 by changing the functions runq_add() and runq_add_pri() in file sys/kern/kern_switch.c. These changes ensure processes are added to the process queues in order of decreasing priority, making each process queue a max priority queue. The Splatter Scheduler is implemented in cases 2 and 3 by changing the function tdq_runq_add() in file sys/kern/sched_ule.c. This change randomizes the priority value that is passed into the runq_add function within the range of user processes.
+Control for the running of each case is provided by a shell script, mode.sh, which selects the proper versions of each file for the specified case and copies them into the local /usr/src directory. The kernel must then be built from this directory using the make buildkernel command. 
+Performance testing for each case is provided by a shell script, test.csh, which was run on cloned copies of FreeBSD, containing the modifications. 5 runs were performed on each, restarting the system between each run. The averages were then plotted as bar graphs.
+
+IMPLEMENTATION:
+
+In usr/src/sys/sched_ule.c:
+/*including for arc4random()*/
+#include <sys/libkern.h>
+
+
+In usr/src/sys/sched_ule.c:tdq_runq_add:
+    /*check whether SRQ_BORROWING or SRQ_PREEMPTED flags are set*/
+if ((flags & (SRQ_BORROWING|SRQ_PREEMPTED)) == 0) {
+    /*generate a random number in range of user process priorities*/
+	pri = PRI_MIN_BATCH + ((PRI_MAX_BATCH-PRI_MIN_BATCH)*(arc4random()/0xffffffff));
+    ...
+
+In usr/src/sys/kern_switch.c:runq_add,runq_add_pri:
+
+...
+	/*check whether td_runq is empty*/
+if (flags & SRQ_PREEMPTED) {
+	/*insert td at head if td_runq is empty*/
+    TAILQ_INSERT_HEAD(rqh, td, td_runq);
+} else {
+	/*otherwise, traverse td_runq*/
+    struct thread *rqi; 
+    TAILQ_FOREACH(rqi, rqh, td_runq) {
+    	/*check if thread at rqi is lower priority than td*/
+        if(rqi->td_priority <= td->td_priority) {
+        	/*if so, insert td before rqi and exit loop*/
+            TAILQ_INSERT_BEFORE(rqi, td, td_runq);
+            break;
+        }
+    }
+    /*if loop exits normally, all td_runq threads are higher priority than td
+    and rqi == NULL*/
+    if (rqi == NULL) {
+    	/*if so, insert td on td_runq tail*/
+        TAILQ_INSERT_TAIL(rqh, td, td_runq);
+    }
+}
+

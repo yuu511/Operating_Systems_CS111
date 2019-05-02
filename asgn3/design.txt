@@ -1,0 +1,142 @@
+ASSIGNMENT 3 DESIGN DOCUMENT
+Elijah Cordova, Calvin Houser, Fanchao Kong, Roger Ou
+CruzIDs: ejcordov, cphouser, fkong1, rokou
+CMPS 111, Fall 2018
+
+GOALS:
+The main goal of this assignment is to implement the FIFO virtual memory algorithm in FreeBSD.
+Memory in the FIFO algorithm is managed by a simple queue.
+Newer memory entries get placed in back of the list, while older ones get placed near the front.
+Once the system needs memory, it kicks out the front of the list, or the oldest memory.
+
+Everytime a pageout occurs,we have to log the number of pages scanned, the number of pages moved from ACTIVE -> INACTIVE and to cache/ free, and number of pages queued for a flush.
+
+We also must have a writeup, which tests the preformace of our code.
+
+Assumptions:
+FreeBSD uses the CLOCK algorithm to replace virtual memory. 
+The clock algorith has two different queues, inactive and active, which are run infrequently and frequently respectively.
+For the CLOCK algorithm, all entries have a priority. Active processes have a priority greater than 0, while inactive processes have a priority of 0 or less.
+
+Design:
+Our approach involves altering the two-queue system in the CLOCK algorithm. Since we only need one queue to implement the FIFO algorithm, we chose to direct all traffic to
+one queue. We use the ACTIVE queue, as it is scanned frequently, and sends the signal to do laundry if needed. This works the best for implementing the FIFO algorithm,
+as the memory needs to constantly be checked and evicted to vitual memory if needed. To make sure that all traffic goes through the active queue, we remove all functions of 
+decrementing and incrementing priority. Entries stay forever as the default priority (5), and the inactive queue remains unpopulated. Once the main memory is full, the 
+framework sends the memory to virtual memory, as by design nothing enters the inactive queues. Laundry handling is already handled within the CLOCK algorithm in the
+active queue.          
+
+To log, we plan on simply using the log() system call and parsing the text through /var/log/messages. We will be altering both vm_pageout_worker and vm_pageout_scan.
+
+FILES:
+Source files:
+./usr/src/sys/vm/vm_pageout.c -> Original Source file. (CLOCK)
+./usr/src/sys/vm/vm_pageout_log.c -> Original Source file, with logs.
+./usr/src/sys/vm/vm_fifo_pageout_log.c -> FIFO Virtual Memory management, with logs.
+
+Scripts:
+./scripts/mode.sh -> Running sudo ./mode (NUMBER) within the ./scripts/ directory copies a specified file in the repository to /usr/src/sys/vm/vm_pageout.c
+sudo ./mode.sh 0 -> source
+sudo ./mode.sh 1 -> source,with logs
+sudo ./mode.sh 2 -> fifo, with logs
+
+Writeup:
+./benchmark/WRITEUP.pdf : Comparison benchmark of FIFO vs CLOCK
+
+Implementation:
+(Lots of commented code) 
+
+Removal of incrementation / decrementation in priorities and weighing:
+1233: 
+//			act_delta = 1;
+
+1235:
+//			act_delta = 0;
+
+1254:
+//				m->act_count += act_delta + ACT_ADVANCE;
+
+1436-1441:
+//if (act_delta != 0) {
+//	m->act_count += ACT_ADVANCE + act_delta;
+//	if (m->act_count > ACT_MAX)
+//		m->act_count = ACT_MAX;
+//} else
+	//	m->act_count -= min(m->act_count, ACT_DECLINE);
+
+1374:
+//	scan_tick = ticks;
+...
+//		vmd->vmd_last_active_scan = scan_tick;
+
+
+
+Removal of INACTIVE queue parameters / weighing:
+
+1078 : 
+      //long min_scan
+
+1137:
+      //	for (m = TAILQ_FIRST(&pq->pq_pl);
+     //	     m != NULL && maxscan-- > 0 && page_shortage > 0;
+     //	     m = next) {
+
+1231- 1262: 
+//		if ((m->aflags & PGA_REFERENCED) != 0) {
+...
+//				goto drop_page;
+
+1294: 
+//drop_page 
+
+1408-1449:
+	//if ((m->aflags & PGA_REFERENCED) != 0) {
+...
+//			vm_page_dequeue_locked(m);
+
+1480-1482:
+//			}
+//		} else
+//			vm_page_requeue_locked(m);
+
+Removal of entries going from active -> inactive: 
+1352:
+//  page_shortage = starting_page_shortage - pages removed from inactive
+//  inactq_shortage = vm_cnt.v_inactive_target - (vm_cnt.v_inactive_count +
+//      vm_cnt.v_laundry_count / act_scan_laundry_weight) +
+//      vm_paging_target() + deficit + addl_page_shortage;
+//  inactq_shortage *= act_scan_laundry_weight;
+
+
+
+Logging:
+To track page whether or not a page gets added to the active queue or laundry/free, we use two simple variables pageup and pagedown, which are invoked in the active queue scan.
+
+1479 :
+if (m->dirty == 0) {
+	vm_page_free(m);
+} else {
+	vm_page_launder(m);
+}
+pagesdown++;
+page_shortage--;
+
+To track our Active/Inactive/laundry queue pages, we simply dereference built-in variables.
+1750:
+	log(LOG_ALERT, "Pageout Running\n");
+	numpages_a = domain->vmd_pagequeues[PQ_ACTIVE].pq_cnt;
+	log(LOG_ALERT, "Pages in active queue: %d\n", numpages_a);
+
+	numpages_i = domain->vmd_pagequeues[PQ_INACTIVE].pq_cnt;
+	log(LOG_ALERT, "Pages in inactive queue: %d\n", numpages_i);
+
+	numpages_l = domain->vmd_pagequeues[PQ_LAUNDRY].pq_cnt;
+	log(LOG_ALERT, "Pages in laundry queue: %d\n", numpages_l);
+To log how many pages are availble, we simply take total number of pages - total occupied pages.
+
+:1760
+		numpages_a = vm_cnt.v_page_count - numpages_a - numpages_i - numpages_l;
+		log(LOG_ALERT, "Free Pages: %d\n", numpages_a);
+		mtx_lock(&vm_page_queue_free_mtx);
+
+

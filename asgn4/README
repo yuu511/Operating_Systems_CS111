@@ -1,0 +1,14 @@
+NOT IMPLEMENTED
+	.unlink		= f32_unlink,
+	.rmdir		= f32_rmdir,
+	.truncate	= f32_truncate,
+	.statfs		= f32_statfs,
+	.flush		= f32_flush,
+	.release	= f32_release,
+	.opendir	= f32_opendir,
+	.releasedir	= f32_releasedir,
+	.create		= f32_create,
+	.utimens	= f32_utimens,
+	.write_buf	= f32_write_buf,
+	.read_buf	= f32_read_buf,
+	.fallocate	= f32_fallocate
