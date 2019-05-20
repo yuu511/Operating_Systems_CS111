@@ -1,0 +1,5 @@
+Operating systems, CMPS 111
+Lab1: Writing a shell in C
+Lab2: Altering the process scheduler, 
+Lab3: Altering the virtual memory management algorithm
+Lab4: Implementing FAT filesystem in userspace using FUSE
